@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Entity Recognition FAQ Chatbot</title>
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #f3f7fb;
+            text-align: center;
+        }
+        .chatbox {
+            width: 550px;
+            margin: 30px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+        input {
+            width: 75%;
+            padding: 8px;
+        }
+        button {
+            padding: 8px 12px;
+        }
+        #chat {
+            margin-top: 15px;
+            text-align: left;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Institute Chatbot (With Entity Recognition)</h2>
+
+<div class="chatbox">
+    <input type="text" id="userInput" placeholder="Ask your question">
+    <button onclick="reply()">Send</button>
+    <div id="chat"></div>
+</div>
+
+<script>
+
+// ---------------- Preprocessing ----------------
+function preprocess(text) {
+    text = text.toLowerCase();
+    text = text.replace(/[^\w\s]/g, "");
+    return text;
+}
+
+// ---------------- Intent Detection ----------------
+function detectIntent(text) {
+    if (text.includes("exam")) return "EXAM";
+    if (text.includes("fee")) return "FEES";
+    if (text.includes("timing")) return "TIMINGS";
+    return "UNKNOWN";
+}
+
+// ---------------- Entity Extraction ----------------
+function extractEntities(text) {
+
+    let entities = {};
+
+    // Extract Semester (SEM 5 or Semester 3)
+    let semMatch = text.match(/sem\s?(\d+)|semester\s?(\d+)/);
+    if (semMatch) {
+        entities.semester = semMatch[1] || semMatch[2];
+    }
+
+    // Extract Course Code (CS, IT, ME etc.)
+    let courseMatch = text.match(/\b(cs|it|me|ece|civil)\b/);
+    if (courseMatch) {
+        entities.course = courseMatch[1].toUpperCase();
+    }
+
+    // Extract Date (simple format: 15 March or 10/04/2026)
+    let dateMatch = text.match(/\b(\d{1,2}[\/\-]\d{1,2}[\/\-]?\d{0,4})\b|\b(\d{1,2}\s?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*)\b/);
+    if (dateMatch) {
+        entities.date = dateMatch[0];
+    }
+
+    return entities;
+}
+
+// ---------------- Response Generator ----------------
+function generateResponse(intent, entities) {
+
+    if (intent === "EXAM") {
+
+        let semText = entities.semester ? "Semester " + entities.semester : "";
+        let courseText = entities.course ? " " + entities.course : "";
+
+        if (semText || courseText) {
+            return semText + courseText + " exams start from 15th March.";
+        }
+        else {
+            return "Exams begin in March. Please specify semester or course.";
+        }
+    }
+
+    if (intent === "FEES") {
+        return "Annual tuition fees range from ₹50,000 to ₹1,20,000.";
+    }
+
+    if (intent === "TIMINGS") {
+        return "College timings are 9:00 AM to 5:00 PM.";
+    }
+
+    return "Sorry, I couldn't understand your question.";
+}
+
+// ---------------- Main Function ----------------
+function reply() {
+
+    let input = document.getElementById("userInput").value;
+    let processedText = preprocess(input);
+
+    let intent = detectIntent(processedText);
+    let entities = extractEntities(processedText);
+
+    let response = generateResponse(intent, entities);
+
+    document.getElementById("chat").innerHTML +=
+        "<b>You:</b> " + input +
+        "<br><b>Detected Intent:</b> " + intent +
+        "<br><b>Extracted Entities:</b> " + JSON.stringify(entities) +
+        "<br><b>Bot:</b> " + response +
+        "<br><br>";
+
+    document.getElementById("userInput").value = "";
+}
+
+</script>
+
+</body>
+</html>
