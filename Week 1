@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Institute FAQ Chatbot</title>
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        .chatbox {
+            width: 400px;
+            margin: auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        input {
+            width: 80%;
+            padding: 8px;
+        }
+        button {
+            padding: 8px;
+        }
+        #chat {
+            margin-top: 15px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Institute FAQ Chatbot</h2>
+
+<div class="chatbox">
+    <input type="text" id="userInput" placeholder="Ask your question">
+    <button onclick="reply()">Send</button>
+
+    <div id="chat"></div>
+</div>
+
+<script>
+function reply() {
+    var userText = document.getElementById("userInput").value.toLowerCase();
+    var response = "";
+
+    if (userText.includes("timing")) {
+        response = "College timings are 9:00 AM to 5:00 PM.";
+    }
+    else if (userText.includes("fees")) {
+        response = "The annual fees range from ₹50,000 to ₹1,20,000.";
+    }
+    else if (userText.includes("contact")) {
+        response = "You can contact us at +91-9876543210.";
+    }
+    else if (userText.includes("email")) {
+        response = "Our official email is info@college.edu";
+    }
+    else if (userText.includes("address") || userText.includes("location")) {
+        response = "We are located at Main Road, City Center.";
+    }
+    else if (userText.includes("courses")) {
+        response = "We offer Engineering, Management, and Science courses.";
+    }
+    else if (userText.includes("hostel")) {
+        response = "Yes, hostel facilities are available for boys and girls.";
+    }
+    else if (userText.includes("library")) {
+        response = "Library timings are 9:00 AM to 8:00 PM.";
+    }
+    else if (userText.includes("exam")) {
+        response = "Exam cell is located in Block B, 2nd floor.";
+    }
+    else if (userText.includes("scholarship")) {
+        response = "Scholarships are available for eligible students.";
+    }
+    else if (userText.includes("placement")) {
+        response = "Yes, we provide campus placement assistance.";
+    }
+    else if (userText.includes("website")) {
+        response = "Visit our website: www.college.edu";
+    }
+    else {
+        response = "Sorry, I can answer only institute-related FAQs.";
+    }
+
+    document.getElementById("chat").innerHTML =
+        "<b>You:</b> " + userText + "<br><b>Bot:</b> " + response + "<br><br>";
+}
+</script>
+
+</body>
+</html>
