@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Preprocessed FAQ Chatbot</title>
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #eef2f3;
+            text-align: center;
+        }
+        .chatbox {
+            width: 420px;
+            margin: auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        input {
+            width: 80%;
+            padding: 8px;
+        }
+        button {
+            padding: 8px;
+        }
+        #chat {
+            margin-top: 15px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Institute FAQ Chatbot (With Preprocessing)</h2>
+
+<div class="chatbox">
+    <input type="text" id="userInput" placeholder="Ask your question">
+    <button onclick="reply()">Send</button>
+
+    <div id="chat"></div>
+</div>
+
+<script>
+function preprocess(text) {
+
+    // 1. Lowercasing
+    text = text.toLowerCase();
+
+    // 2. Remove punctuation
+    text = text.replace(/[^\w\s]/g, "");
+
+    // 3. Basic spelling normalization
+    text = text.replace("collage", "college");
+    text = text.replace("timimgs", "timings");
+
+    // 4. Tokenization
+    let tokens = text.split(" ");
+
+    // 5. Stop word removal
+    let stopWords = ["is", "are", "the", "what", "when", "where", "how", "a", "an", "of", "for"];
+    tokens = tokens.filter(word => !stopWords.includes(word));
+
+    return tokens.join(" ");
+}
+
+function reply() {
+    let userText = document.getElementById("userInput").value;
+    let processedText = preprocess(userText);
+    let response = "";
+
+    if (processedText.includes("timing")) {
+        response = "College timings are 9:00 AM to 5:00 PM.";
+    }
+    else if (processedText.includes("fees")) {
+        response = "The annual fees range from ₹50,000 to ₹1,20,000.";
+    }
+    else if (processedText.includes("contact")) {
+        response = "Contact number: +91-9876543210.";
+    }
+    else if (processedText.includes("email")) {
+        response = "Official email: info@college.edu";
+    }
+    else if (processedText.includes("address") || processedText.includes("location")) {
+        response = "College is located at Main Road, City Center.";
+    }
+    else if (processedText.includes("courses")) {
+        response = "Courses offered: Engineering, Management, Science.";
+    }
+    else if (processedText.includes("hostel")) {
+        response = "Hostel facilities are available.";
+    }
+    else if (processedText.includes("library")) {
+        response = "Library timings are 9 AM to 8 PM.";
+    }
+    else if (processedText.includes("exam")) {
+        response = "Exam cell is in Block B, 2nd floor.";
+    }
+    else if (processedText.includes("scholarship")) {
+        response = "Scholarships are available for eligible students.";
+    }
+    else if (processedText.includes("placement")) {
+        response = "Placement assistance is provided.";
+    }
+    else if (processedText.includes("website")) {
+        response = "Website: www.college.edu";
+    }
+    else {
+        response = "Sorry, I can answer only institute-related FAQs.";
+    }
+
+    document.getElementById("chat").innerHTML +=
+        "<b>You:</b> " + userText +
+        "<br><b>Processed:</b> " + processedText +
+        "<br><b>Bot:</b> " + response + "<br><br>";
+}
+</script>
+
+</body>
+</html>
