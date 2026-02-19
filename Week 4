@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Retrieval-Based FAQ Chatbot</title>
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #eef4f7;
+            text-align: center;
+        }
+        .chatbox {
+            width: 550px;
+            margin: 30px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+        input {
+            width: 75%;
+            padding: 8px;
+        }
+        button {
+            padding: 8px 12px;
+        }
+        #chat {
+            margin-top: 15px;
+            text-align: left;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Institute FAQ Chatbot (TF-IDF Retrieval)</h2>
+
+<div class="chatbox">
+    <input type="text" id="userInput" placeholder="Ask your question">
+    <button onclick="reply()">Send</button>
+    <div id="chat"></div>
+</div>
+
+<script>
+
+// ---------------- FAQ Knowledge Base ----------------
+const faqs = [
+    { question: "What are the college timings?", answer: "College timings are 9:00 AM to 5:00 PM." },
+    { question: "What is the tuition fee structure?", answer: "Annual fees range from ₹50,000 to ₹1,20,000." },
+    { question: "How can I contact the office?", answer: "You can contact us at +91-9876543210." },
+    { question: "When do exams start?", answer: "Exams begin in March." },
+    { question: "What is the dress code?", answer: "Dress code: Blue pant, white shirt, tie and blazer are mandatory." }
+];
+
+// ---------------- Preprocessing ----------------
+function preprocess(text) {
+    text = text.toLowerCase();
+    text = text.replace(/[^\w\s]/g, "");
+    return text.split(" ");
+}
+
+// ---------------- Build Vocabulary ----------------
+let vocabulary = new Set();
+
+faqs.forEach(faq => {
+    preprocess(faq.question).forEach(word => vocabulary.add(word));
+});
+
+vocabulary = Array.from(vocabulary);
+
+// ---------------- TF Calculation ----------------
+function computeTF(tokens) {
+    let tf = {};
+    vocabulary.forEach(word => tf[word] = 0);
+    tokens.forEach(word => {
+        if (tf[word] !== undefined) tf[word] += 1;
+    });
+    return tf;
+}
+
+// ---------------- IDF Calculation ----------------
+function computeIDF() {
+    let idf = {};
+    vocabulary.forEach(word => {
+        let count = 0;
+        faqs.forEach(faq => {
+            if (preprocess(faq.question).includes(word)) count++;
+        });
+        idf[word] = Math.log(faqs.length / (count + 1));
+    });
+    return idf;
+}
+
+const idf = computeIDF();
+
+// ---------------- TF-IDF Vector ----------------
+function computeTFIDF(tokens) {
+    let tf = computeTF(tokens);
+    let vector = [];
+    vocabulary.forEach(word => {
+        vector.push(tf[word] * idf[word]);
+    });
+    return vector;
+}
+
+// ---------------- Cosine Similarity ----------------
+function cosineSimilarity(vec1, vec2) {
+    let dot = 0, normA = 0, normB = 0;
+    for (let i = 0; i < vec1.length; i++) {
+        dot += vec1[i] * vec2[i];
+        normA += vec1[i] * vec1[i];
+        normB += vec2[i] * vec2[i];
+    }
+    return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+// ---------------- Reply Function ----------------
+function reply() {
+
+    let input = document.getElementById("userInput").value;
+    let tokens = preprocess(input);
+
+    let queryVector = computeTFIDF(tokens);
+
+    let maxScore = 0;
+    let bestAnswer = "Sorry, I couldn't find a relevant answer.";
+
+    faqs.forEach(faq => {
+        let faqVector = computeTFIDF(preprocess(faq.question));
+        let score = cosineSimilarity(queryVector, faqVector);
+
+        if (score > maxScore) {
+            maxScore = score;
+            bestAnswer = faq.answer;
+        }
+    });
+
+    document.getElementById("chat").innerHTML +=
+        "<b>You:</b> " + input +
+        "<br><b>Bot:</b> " + bestAnswer +
+        "<br><br>";
+
+    document.getElementById("userInput").value = "";
+}
+
+</script>
+
+</body>
+</html>
