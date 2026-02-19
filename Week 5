@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>College Chatbot</title>
+    <style>
+        body { font-family: Arial; background: #f4f6f9; display: flex; justify-content: center; margin-top: 40px; }
+        #chat-container { width: 400px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        #chat-box { height: 400px; overflow-y: auto; padding: 15px; }
+        .message { margin-bottom: 10px; }
+        .user { text-align: right; color: blue; }
+        .bot { text-align: left; color: green; }
+        #input-area { display: flex; border-top: 1px solid #ddd; }
+        #user-input { flex: 1; padding: 10px; border: none; outline: none; }
+        button { padding: 10px 15px; border: none; background: #007bff; color: white; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+
+<div id="chat-container">
+    <div id="chat-box"></div>
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Ask something...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+let state = { awaiting_slot: null, intent: null, entities: {} };
+
+// Define intents and responses
+const intents = {
+    "admissions": ["admission", "apply", "eligibility", "last date"],
+    "exams": ["exam", "exams", "semester exam", "final exam", "exam schedule"],
+    "timetable": ["timetable", "classes start", "lecture schedule", "class routine"],
+    "hostel": ["hostel", "room booking", "boys hostel", "girls hostel"],
+    "scholarships": ["scholarship", "financial aid", "merit scholarship", "government scholarship"],
+    "fees": ["fee", "tuition", "semester fee", "course fee"]
+};
+
+const responses = {
+    "admissions": "Admissions close on August 30. You can apply online via the college portal.",
+    "exams": "Exams are scheduled in March. Check your year-specific schedule.",
+    "timetable": "Classes usually start from 9 AM. Check department notice board for detailed timetable.",
+    "hostel": "Hostel facilities are available for boys and girls. Contact hostel office for booking.",
+    "scholarships": "Scholarships are available based on merit and financial need.",
+    "fees": "Fees vary by year. Please specify your year for exact details."
+};
+
+// Detect intent based on keywords
+function detectIntent(text) {
+    text = text.toLowerCase();
+    for (let intent in intents) {
+        for (let keyword of intents[intent]) {
+            if (text.includes(keyword)) return intent;
+        }
+    }
+    return null;
+}
+
+// Handle user message
+function handleMessage(text) {
+    // Multi-turn: if awaiting year for fees
+    if (state.awaiting_slot === "year") {
+        let year = text.match(/\b(1|2|3|4)(st|nd|rd|th)?\b/)?.[1] || 
+                   (text.includes("first") ? "1" : text.includes("second") ? "2" : text.includes("third") ? "3" : text.includes("fourth") ? "4" : null);
+        if (year) {
+            state.awaiting_slot = null;
+            return `Fees for year ${year}: ₹${["83000","99600","116200","132800"][year-1]} per semester.`;
+        } else {
+            return "Please specify which year (1st, 2nd, 3rd, 4th).";
+        }
+    }
+
+    let intent = detectIntent(text);
+    if (intent) {
+        state.intent = intent;
+        if (intent === "fees" && !text.match(/\b(1|2|3|4)\b/)) {
+            state.awaiting_slot = "year";
+            return "Which year are you asking about for fees?";
+        }
+        return responses[intent];
+    }
+
+    return "I can help with: Admissions, Exams, Timetable, Hostel, Scholarships, Fees.";
+}
+
+// Add message to chat box
+function addMessage(text, sender) {
+    let chatBox = document.getElementById("chat-box");
+    let message = document.createElement("div");
+    message.className = "message " + sender;
+    message.innerText = text;
+    chatBox.appendChild(message);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Send message
+function sendMessage() {
+    let input = document.getElementById("user-input");
+    let text = input.value.trim();
+    if (!text) return;
+    addMessage(text, "user");
+    let response = handleMessage(text);
+    addMessage(response, "bot");
+    input.value = "";
+}
+
+document.getElementById("user-input").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") sendMessage();
+});
+</script>
+
+</body>
+</html>
