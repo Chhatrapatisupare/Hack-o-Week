@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Synonym-Aware FAQ Chatbot</title>
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #e9f0f4;
+            text-align: center;
+        }
+        .chatbox {
+            width: 450px;
+            margin: auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        input {
+            width: 80%;
+            padding: 8px;
+        }
+        button {
+            padding: 8px;
+        }
+        #chat {
+            margin-top: 15px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Institute FAQ Chatbot (Synonym Aware)</h2>
+
+<div class="chatbox">
+    <input type="text" id="userInput" placeholder="Ask your question">
+    <button onclick="reply()">Send</button>
+
+    <div id="chat"></div>
+</div>
+
+<script>
+// ---------- PREPROCESSING ----------
+function preprocess(text) {
+    text = text.toLowerCase();
+    text = text.replace(/[^\w\s]/g, "");
+    text = text.replace("collage", "college");
+    let stopWords = ["is","are","the","what","when","where","how","a","an","of","for"];
+    let tokens = text.split(" ").filter(w => !stopWords.includes(w));
+    return tokens;
+}
+
+// ---------- SYNONYM DICTIONARY ----------
+const synonymGroups = {
+    FEES: ["fees", "fee", "tuition", "payment", "cost"],
+    TIMINGS: ["timing", "time", "hours", "schedule"],
+    CONTACT: ["contact", "phone", "call", "number"],
+    EMAIL: ["email", "mail"],
+    ADDRESS: ["address", "location", "place"],
+    COURSES: ["courses", "course", "program", "degree"],
+    HOSTEL: ["hostel", "accommodation", "stay"],
+    LIBRARY: ["library", "books", "reading"],
+    EXAM: ["exam", "test", "examination"],
+    SCHOLARSHIP: ["scholarship", "grant", "aid"],
+    PLACEMENT: ["placement", "job", "career"]
+};
+
+// ---------- INTENT DETECTION ----------
+function detectIntent(tokens) {
+    for (let intent in synonymGroups) {
+        for (let word of synonymGroups[intent]) {
+            if (tokens.includes(word)) {
+                return intent;
+            }
+        }
+    }
+    return "UNKNOWN";
+}
+
+// ---------- RESPONSE ----------
+function reply() {
+    let input = document.getElementById("userInput").value;
+    let tokens = preprocess(input);
+    let intent = detectIntent(tokens);
+    let response = "";
+
+    switch(intent) {
+        case "FEES":
+            response = "The annual tuition fees range from ₹50,000 to ₹1,20,000.";
+            break;
+        case "TIMINGS":
+            response = "College timings are 9:00 AM to 5:00 PM.";
+            break;
+        case "CONTACT":
+            response = "Contact us at +91-9876543210.";
+            break;
+        case "EMAIL":
+            response = "Official email: info@college.edu";
+            break;
+        case "ADDRESS":
+            response = "College is located at Main Road, City Center.";
+            break;
+        case "COURSES":
+            response = "Courses offered include Engineering, Management, and Science.";
+            break;
+        case "HOSTEL":
+            response = "Hostel facilities are available for students.";
+            break;
+        case "LIBRARY":
+            response = "Library is open from 9 AM to 8 PM.";
+            break;
+        case "EXAM":
+            response = "Exam cell is located in Block B, 2nd floor.";
+            break;
+        case "SCHOLARSHIP":
+            response = "Scholarships are available for eligible students.";
+            break;
+        case "PLACEMENT":
+            response = "Placement assistance is provided to final-year students.";
+            break;
+        default:
+            response = "Sorry, I couldn't understand your query.";
+    }
+
+    document.getElementById("chat").innerHTML +=
+        "<b>You:</b> " + input +
+        "<br><b>Intent:</b> " + intent +
+        "<br><b>Bot:</b> " + response + "<br><br>";
+}
+</script>
+
+</body>
+</html>
