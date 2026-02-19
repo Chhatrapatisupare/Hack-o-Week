@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>College Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        #chat-container {
+            width: 400px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chat-box {
+            height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .message {
+            margin-bottom: 10px;
+        }
+
+        .user {
+            text-align: right;
+            color: blue;
+        }
+
+        .bot {
+            text-align: left;
+            color: green;
+        }
+
+        #input-area {
+            display: flex;
+            border-top: 1px solid #ddd;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div id="chat-container">
+    <div id="chat-box"></div>
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Ask something...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+
+let state = {
+    intent: null,
+    entities: {},
+    awaiting_slot: null
+};
+
+// Knowledge Base
+const EXAM_SCHEDULE = {
+    "1": "First year exam is on March 10.",
+    "2": "Second year exam is on March 15.",
+    "3": "Third year exam is on March 20.",
+    "4": "Fourth year exam is on March 25."
+};
+
+const RESULT_DATES = {
+    "1": "First year results will be announced on April 10.",
+    "2": "Second year results will be announced on April 15.",
+    "3": "Third year results will be announced on April 20.",
+    "4": "Fourth year results will be announced on April 25."
+};
+
+const TIMETABLE = {
+    "1": "First year classes start at 9 AM.",
+    "2": "Second year classes start at 10 AM.",
+    "3": "Third year classes start at 11 AM.",
+    "4": "Fourth year classes start at 12 PM."
+};
+
+// ✅ Fees in Indian Rupees
+const FEES = {
+    "1": "₹83,000 per semester.",
+    "2": "₹99,600 per semester.",
+    "3": "₹1,16,200 per semester.",
+    "4": "₹1,32,800 per semester."
+};
+
+const ADMISSION_DEADLINE = "Admissions close on August 30.";
+
+// Intent Detection
+function detectIntent(text) {
+    text = text.toLowerCase();
+
+    if (text.includes("exam")) return "get_exam_date";
+    if (text.includes("result")) return "get_result";
+    if (text.includes("timetable") || text.includes("class time")) return "get_timetable";
+    if (text.includes("fee")) return "get_fees";
+    if (text.includes("admission") || text.includes("deadline")) return "get_admission_deadline";
+
+    return null;
+}
+
+// Extract Year
+function extractYear(text) {
+    text = text.toLowerCase();
+
+    if (text.match(/\b1(st)?\b/) || text.includes("first")) return "1";
+    if (text.match(/\b2(nd)?\b/) || text.includes("second")) return "2";
+    if (text.match(/\b3(rd)?\b/) || text.includes("third")) return "3";
+    if (text.match(/\b4(th)?\b/) || text.includes("fourth")) return "4";
+
+    return null;
+}
+
+// Fulfill Intent
+function fulfillIntent() {
+    let year = state.entities.year;
+    let response = "";
+
+    switch (state.intent) {
+        case "get_exam_date":
+            response = EXAM_SCHEDULE[year] || "Exam schedule not found.";
+            break;
+        case "get_result":
+            response = RESULT_DATES[year] || "Result date not found.";
+            break;
+        case "get_timetable":
+            response = TIMETABLE[year] || "Timetable not found.";
+            break;
+        case "get_fees":
+            response = "Fees for year " + year + ": " + (FEES[year] || "Not available");
+            break;
+        case "get_admission_deadline":
+            response = ADMISSION_DEADLINE;
+            break;
+        default:
+            response = "I'm not sure how to help.";
+    }
+
+    state.intent = null;
+    state.entities = {};
+    state.awaiting_slot = null;
+
+    return response;
+}
+
+// Handle Message
+function handleMessage(text) {
+
+    if (state.awaiting_slot === "year") {
+        let year = extractYear(text);
+        if (year) {
+            state.entities.year = year;
+            state.awaiting_slot = null;
+            return fulfillIntent();
+        } else {
+            return "Please specify which year (1st, 2nd, 3rd, 4th).";
+        }
+    }
+
+    let intent = detectIntent(text);
+
+    if (intent) {
+        state.intent = intent;
+
+        if (intent === "get_admission_deadline") {
+            return fulfillIntent();
+        }
+
+        let year = extractYear(text);
+
+        if (year) {
+            state.entities.year = year;
+            return fulfillIntent();
+        } else {
+            state.awaiting_slot = "year";
+            return "Which year are you asking about?";
+        }
+    }
+
+    return `I can help with:
+- Exam dates
+- Results
+- Timetable
+- Fees
+- Admission deadline`;
+}
+
+// UI Functions
+function addMessage(text, sender) {
+    let chatBox = document.getElementById("chat-box");
+    let message = document.createElement("div");
+    message.className = "message " + sender;
+    message.innerText = text;
+    chatBox.appendChild(message);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function sendMessage() {
+    let input = document.getElementById("user-input");
+    let text = input.value.trim();
+    if (text === "") return;
+
+    addMessage(text, "user");
+
+    let response = handleMessage(text);
+    addMessage(response, "bot");
+
+    input.value = "";
+}
+
+document.getElementById("user-input").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+        sendMessage();
+    }
+});
+
+</script>
+
+</body>
+</html>
