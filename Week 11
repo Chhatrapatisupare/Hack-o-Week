@@ -1,0 +1,34 @@
+https://www.tinkercad.com/things/kXMmgSPMUhx/editel
+
+// C++ code
+//
+#include <Servo.h>
+
+int Pir_sensor = 0;
+
+Servo servo_7;
+
+void setup()
+{
+  pinMode(4, INPUT);
+  Serial.begin(9600);
+  servo_7.attach(7, 500, 2500);
+  pinMode(9, OUTPUT);
+  pinMode(11, OUTPUT);
+}
+
+void loop()
+{
+  Pir_sensor = digitalRead(4);
+  Serial.println(Pir_sensor);
+  if (Pir_sensor == 1) {
+    servo_7.write(90);
+    digitalWrite(9, HIGH);
+    digitalWrite(11, LOW);
+  } else {
+    servo_7.write(0);
+    digitalWrite(9, LOW);
+    digitalWrite(11, HIGH);
+  }
+  delay(1000); // Wait for 1000 millisecond(s)
+}
