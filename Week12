@@ -1,0 +1,47 @@
+
+const int trigpin = 7;
+const int echopin = 6;
+const int buzzer = 8; 
+const int motor = 9;   // motor control pin
+
+long sure;
+int mesafe;
+
+void setup() {
+    Serial.begin(9600);
+    pinMode(trigpin, OUTPUT);
+    pinMode(echopin, INPUT);
+    pinMode(buzzer, OUTPUT); 
+    pinMode(motor, OUTPUT);
+}
+
+void loop() {
+    // Trigger ultrasonic pulse
+    digitalWrite(trigpin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigpin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigpin, LOW);
+
+    // Measure echo
+    sure = pulseIn(echopin, HIGH, 30000); 
+    if (sure == 0) {
+        Serial.println("No echo detected!");
+    } else {
+        mesafe = (sure / 2) / 29.0; // distance in cm
+        Serial.print("Distance: ");
+        Serial.print(mesafe);
+        Serial.println(" cm");
+
+        // Safety logic: if object within 200 cm
+        if (mesafe <= 200) {
+            tone(buzzer, 1000);       // buzzer ON
+            digitalWrite(motor, LOW); // stop motor
+        } else {
+            noTone(buzzer);           // buzzer OFF
+            digitalWrite(motor, HIGH);// motor ON
+        }
+    }
+
+    delay(200); 
+}
